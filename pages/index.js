@@ -3,18 +3,20 @@ import { useState } from "react";
 import styles from "./index.module.css";
 
 export default function Home() {
-  const [animalInput, setAnimalInput] = useState("");
-  const [result, setResult] = useState();
+  const [msgInput, setMsgInput] = useState("user: ");
+  const [result, setResult] = useState([]);
 
   async function onSubmit(event) {
     event.preventDefault();
+
     try {
+      setResult(["Sending request..."])
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ animal: animalInput }),
+        body: JSON.stringify({ msg: msgInput }),
       });
 
       const data = await response.json();
@@ -22,12 +24,11 @@ export default function Home() {
         throw data.error || new Error(`Request failed with status ${response.status}`);
       }
 
-      setResult(data.result);
-      setAnimalInput("");
+      setResult(splitContent(data.message.content));
+      setMsgInput(msgInput + "\n\n" + data.message.role + ":\n" + data.message.content );
     } catch(error) {
-      // Consider implementing your own error handling logic here
       console.error(error);
-      alert(error.message);
+      setResult(["ERROR", JSON.stringify(error)]);
     }
   }
 
@@ -39,20 +40,24 @@ export default function Home() {
       </Head>
 
       <main className={styles.main}>
-        <img src="/dog.png" className={styles.icon} />
-        <h3>Name my pet</h3>
         <form onSubmit={onSubmit}>
-          <input
-            type="text"
-            name="animal"
-            placeholder="Enter an animal"
-            value={animalInput}
-            onChange={(e) => setAnimalInput(e.target.value)}
+          <textarea
+            name="msg"
+            rows="10"
+            placeholder="Message"
+            value={msgInput}
+            onChange={(e) => setMsgInput(e.target.value)}
           />
-          <input type="submit" value="Generate names" />
+          <input type="submit" value="Send" />
         </form>
-        <div className={styles.result}>{result}</div>
+        <div className={styles.result}>
+          {result.map(x => (x.startsWith("- ") ? <li>{x.substring(2)}</li> : <p>{x}</p>))}
+        </div>
       </main>
     </div>
   );
+}
+
+function splitContent(content) {
+  return content.split("\n");
 }

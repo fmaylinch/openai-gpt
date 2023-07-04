@@ -15,23 +15,37 @@ export default async function (req, res) {
     return;
   }
 
-  const animal = req.body.animal || '';
-  if (animal.trim().length === 0) {
+  const msg = req.body.msg || '';
+  if (msg.trim().length === 0) {
     res.status(400).json({
       error: {
-        message: "Please enter a valid animal",
+        message: "Please enter a valid message",
       }
     });
     return;
   }
 
   try {
+    const request = {
+      model: "gpt-3.5-turbo",
+      messages: splitTextToMessages(msg),
+    };
+    console.log("Sending request:");
+    console.log(request);
+    const completion = await openai.createChatCompletion(request);
+    /*
     const completion = await openai.createCompletion({
       model: "text-davinci-003",
       prompt: generatePrompt(animal),
       temperature: 0.6,
     });
-    res.status(200).json({ result: completion.data.choices[0].text });
+    */
+    console.log("Got response:");
+    console.log(completion.data);
+    let message = completion.data.choices[0].message;
+    console.log("Message from '" + message.role + "':");
+    console.log(message.content);
+    res.status(200).json({ message });
   } catch(error) {
     // Consider adjusting the error handling logic for your use case
     if (error.response) {
@@ -48,7 +62,46 @@ export default async function (req, res) {
   }
 }
 
-function generatePrompt(animal) {
+function splitTextToMessages(text) {
+  const lines = text.split('\n');
+  const result = [];
+  let currentMessage = null;
+
+  for (const line of lines) {
+    const isStartOfCommand = /^(\w+):/.test(line);
+
+    if (isStartOfCommand) {
+      const colonIndex = line.indexOf(':');
+      const role = line.substring(0, colonIndex).trim();
+      const content = line.substring(colonIndex + 1).trim();
+
+      if (currentMessage) {
+        result.push(cleanMessage(currentMessage));
+      }
+      currentMessage = { role, content };
+
+    } else if (currentMessage) {
+      if (currentMessage.content) {
+        currentMessage.content += '\n' + line.trim();
+      } else {
+        currentMessage.content = line.trim();
+      }
+    }
+  }
+
+  if (currentMessage) {
+    result.push(cleanMessage(currentMessage));
+  }
+
+  return result;
+}
+
+function cleanMessage(message) {
+  message.content = message.content.trim();
+  return message;
+}
+
+function generatePrompt_old(animal) {
   const capitalizedAnimal =
     animal[0].toUpperCase() + animal.slice(1).toLowerCase();
   return `Suggest three names for an animal that is a superhero.
