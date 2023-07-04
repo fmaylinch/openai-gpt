@@ -32,8 +32,34 @@ export default function Home() {
     }
   }
 
+  function stringsToDomElems(strings) {
+    let result = [];
+    let code = null;
+    strings.forEach(str => {
+      if (str.startsWith('- ')) {
+        result.push(<li>{str.substring(2)}</li>);
+      } else if (str.startsWith('- ')) {
+        result.push(<li>{str.substring(2)}</li>);
+      } else if (str.startsWith('```')) {
+        if (code == null) {
+          code = ""; // start code block
+        } else {
+          result.push(<pre className={styles.code}>{code}</pre>)
+          code = null; // finish code block
+        }
+      } else {
+        if (code == null) {
+          result.push(<p>{str}</p>);
+        } else {
+          code += str + "\n"; // building code block
+        }
+      }
+    })
+    return result;
+  }
+
   return (
-    <div>
+    <div className={styles.full}>
       <Head>
         <title>OpenAI Quickstart</title>
         <link rel="icon" href="/dog.png" />
@@ -51,7 +77,7 @@ export default function Home() {
           <input type="submit" value="Send" />
         </form>
         <div className={styles.result}>
-          {result.map(x => (x.startsWith("- ") ? <li>{x.substring(2)}</li> : <p>{x}</p>))}
+          {stringsToDomElems(result)}
         </div>
       </main>
     </div>
