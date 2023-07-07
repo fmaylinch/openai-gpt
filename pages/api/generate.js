@@ -27,7 +27,7 @@ export default async function (req, res) {
 
   try {
     const request = {
-      model: "gpt-3.5-turbo",
+      model: req.body.model,
       messages: splitTextToMessages(msg),
     };
     console.log("Sending request:");

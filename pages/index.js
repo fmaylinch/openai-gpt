@@ -9,6 +9,8 @@ export default function Home() {
   async function onSubmit(event) {
     event.preventDefault();
 
+    let model = "gpt-3.5-turbo";
+
     try {
       setResult(["Sending request..."])
       const response = await fetch("/api/generate", {
@@ -16,7 +18,7 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ msg: msgInput }),
+        body: JSON.stringify({ msg: msgInput, model }),
       });
 
       const data = await response.json();
