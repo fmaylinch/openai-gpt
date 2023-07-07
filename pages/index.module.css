@@ -76,3 +76,8 @@
 .main .result .code {
   color: #58a693;
 }
+
+.main .result .comment {
+  color: gray;
+}
+
